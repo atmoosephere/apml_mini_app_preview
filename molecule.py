@@ -4,10 +4,6 @@ import qcengine as qcng
 import qcelemental as qcel 
 import numpy as np
 from numpy.typing import NDArray
-# TODO: Add as needed
-
-# Local import(s)
-# TODO: Add as needed
 
 # Molecule class
 class Molecule():
@@ -41,16 +37,14 @@ class Molecule():
         self.masses = np.array([qcel.periodictable.to_mass(symbol) 
                                     for symbol in self.symbols])
         
-        # Need to get connectivity for MM calculations using QCEngine
+        # Get onnectivity for MM calculations using QCEngine
         self.connectivity = qcel.molutil.guess_connectivity(symbols = self.symbols, geometry = self.geometry)
         for bond_index in range(len(self.connectivity)):
             self.connectivity[bond_index] = tuple([self.connectivity[bond_index][0], self.connectivity[bond_index][1], 1.0])
        
-        # NOTE: This method of instantiating a molecule gives unexpected results 
-        # calls similar to the simplified line below also result in similar errors 
-        # mol = qcel.models.Molecule(**{"symbols": ["He"], "geometry": [0, 0, 0]})
-        # Create the QCElemental molecule reprentation
-
+        # Create the QCElemental Molecule representation
+        # TODO: This method of instantiating a molecule gives unexpected results and is therefore not currently in use 
+        # String formatting method used while issue with constructor further investigated  
         self.qcel_mol = qcel.models.Molecule(orient =True,
                                              name = self.name,
                                              geometry = self.geometry, 
@@ -63,7 +57,7 @@ class Molecule():
                                              fix_com = True,
                                             fix_symmetry = "c1")
         
-        # QCEngine string input formatting                     
+        # QCEngine string input formatting for QCElemental Molecule representation                     
         def qcel_input_formatter(geometry,symbols,charge,multiplicity):
             symbol_index = 0
             c_index = 0 
@@ -78,19 +72,19 @@ class Molecule():
                 symbol_index += 1 
             return input_string
 
-        # Create a string data input for qcengine call 
+        # Create a string data input for QCEngine 
         self.input_string = qcel_input_formatter(geometry = self.geometry, symbols = self.symbols, charge = self.molecular_charge, multiplicity= self.molecular_multiplicity)
 
     # Getter function for molecule layer 
-    def get_layer(self):
+    def get_layer(self) -> int:
         return self.layer
     
     # Setter function for molecule layer 
-    def set_layer(self, layer):
+    def set_layer(self, layer) -> int:
          self.layer = layer 
     
     # Returns molecule name 
-    def get_mol_name(self): 
+    def get_mol_name(self) -> str: 
         return self.name
     
     # Get the number of atoms in the molecule
@@ -170,15 +164,16 @@ class Molecule():
     # Get the energy of the molecule at a given level of theory
     def energy(self, method: str = "", basis_set: str = "") -> float:
 
-        # Initialize the molecule energy and the ASE molecule
+        # Initialize the molecule energy
         mol_energy = 0.0
 
-        # Set up the molecule for ASE based on the method requested
+        # Set up the molecule for QCEngine based on the method requested
         if method == "scf":
             # Testing the molecule 
             
 
             # Do SCF calculation with Psi4 by default
+            # Currently not in use due to issues with Molecule construction 
             #model = {"method": method, "basis": basis_set, "keywords": {"scf_type": "direct", "print": 5, "freeze_core": False}}
             #input = qcel.models.AtomicInput(molecule = self.qcel_mol, driver = "energy", model = model)
             #result = qcng.compute(input, "psi4")
@@ -190,7 +185,8 @@ class Molecule():
             input = qcel.models.AtomicInput(molecule = molecule, driver = "energy",model = model)
             result = qcng.compute(input, "psi4")
             mol_energy = result.return_result
-
+        
+        # TODO: update all methods as needed to reflect constructor issue  
         # Set up the molecule for MOPAC-based semiempirical calculations
         elif method == "se":
             
@@ -296,7 +292,8 @@ class Molecule():
 
         return mol_gradient
     
-    # Generic computation interface for the molecule
+    # Generic computation interface for the molecule for future use 
+    # Current implementations make call to energy function directly 
     def compute(self, 
                 method: str = "",           # Computational method (SCF, DFT, etc.)
                 basis_set: str = "",        # Basis set to use (STO-3G, 6-31G*, etc.)
@@ -361,7 +358,7 @@ class Molecule():
         """
         return self.masses
     
-# Unit test(s)
+# Tests for Molecule class 
 def test_molecule():
     
     # Define the molecule
@@ -401,8 +398,6 @@ def test_molecule():
     assert np.allclose(mol.gradient(method = "scf", basis_set = "6-31G*"), np.array([[ 5.60905307e-17, -1.83205576e+00,  9.17096739e-01],
                                                                                      [-1.15687191e-26,  0.00000000e+00, -1.83419348e+00],
                                                                                      [-5.60905307e-17,  1.83205576e+00,  9.17096739e-01]]))
-
-# Testing code for the Molecule class (reconfigure for pytest later on)
 
 
 # Test molecule addition
@@ -465,227 +460,6 @@ def test_molecule_addition():
     print("Monomer 2 energy:", mol2_energy)
     print("Dimer energy:", dimer_energy)
     print("Dimer interaction energy:", dimer_energy - mol1_energy - mol2_energy)
-"""
-# Test two distant water molecules
-def test_two_distant_water_molecules():
-    
-    # Define the first molecule
-    mol1 = Molecule(name = "water",
-                    geometry = np.array([0.0, 0.957, -0.471, 0.0, 0.0, 0.0, 0.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 0)
-    
-    # Define the second molecule (shifted 3 angstroms along the x-axis)
-    mol2 = Molecule(name = "water",
-                    geometry = np.array([10.0, 0.957, -0.471, 10.0, 0.0, 0.0, 10.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 1)
-    
-    # Add the two molecules together
-    mol3 = mol1 + mol2
-    print("Molecular geometry in numpy array format:", mol3.get_coordinate_matrix())
-    print("Internal molecular geometry representation:", mol3.qcel_mol.geometry)
-    assert np.allclose(mol3.get_coordinate_matrix(), np.array([[ 0. ,  0.957, -0.471],
-                                                               [ 0. ,  0.   ,  0.   ],
-                                                               [ 0. , -0.957, -0.471],
-                                                               [ 10. ,  0.957, -0.471],
-                                                               [ 10. ,  0.   ,  0.   ],
-                                                               [ 10. , -0.957, -0.471]]))
-    print("Dimer energy at the RHF/6-31G* level:", mol3.energy(method = "scf", basis_set = "6-31G*"))
-
-    # Calculate the dimer interaction energy at a distance
-    mol1_energy = mol1.energy(method = "scf", basis_set = "6-31G*")
-    mol2_energy = mol2.energy(method = "scf", basis_set = "6-31G*")
-    dimer_energy = mol3.energy(method = "scf", basis_set = "6-31G*")
-    print("Monomer 1 energy:", mol1_energy)
-    print("Monomer 2 energy:", mol2_energy)
-    print("Dimer energy:", dimer_energy)
-    print("Dimer interaction energy:", dimer_energy - mol1_energy - mol2_energy)
-
-# Test limit case of non-interacting dimers when water molecules are 100 angstroms apart
-def test_two_non_interacting_water_molecules():
-    
-    # Define the first molecule
-    mol1 = Molecule(name = "water",
-                    geometry = np.array([0.0, 0.957, -0.471, 0.0, 0.0, 0.0, 0.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 0)
-    
-    # Define the second molecule (shifted 3 angstroms along the x-axis)
-    mol2 = Molecule(name = "water",
-                    geometry = np.array([100.0, 0.957, -0.471, 100.0, 0.0, 0.0, 100.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 1)
-    
-    # Add the two molecules together
-    mol3 = mol1 + mol2
-    print("Molecular geometry in numpy array format:", mol3.get_coordinate_matrix())
-    print("Internal molecular geometry representation:", mol3.qcel_mol.geometry)
-    assert np.allclose(mol3.get_coordinate_matrix(), np.array([[  0. ,   0.957, -0.471],
-                                                               [  0. ,   0.   ,  0.   ],
-                                                               [  0. , -0.957, -0.471],
-                                                               [100. ,   0.957, -0.471],
-                                                               [100. ,   0.   ,  0.   ],
-                                                               [100. , -0.957, -0.471]]))
-    print("Dimer energy at the RHF/6-31G* level:", mol3.energy(method = "scf", basis_set = "6-31G*"))
-
-    # Calculate the dimer interaction energy at a distance
-    mol1_energy = mol1.energy(method = "scf", basis_set = "6-31G*")
-    mol2_energy = mol2.energy(method = "scf", basis_set = "6-31G*")
-    dimer_energy = mol3.energy(method = "scf", basis_set = "6-31G*")
-    print("Monomer 1 energy:", mol1_energy)
-    print("Monomer 2 energy:", mol2_energy)
-    print("Dimer energy:", dimer_energy)
-    print("Dimer interaction energy:", dimer_energy - mol1_energy - mol2_energy)
-
-# Test the generic compute interface for the molecule
-def test_compute():
-    
-    # Define the molecule
-    mol = Molecule(name = "water",
-                   geometry = np.array([0.0, 0.957, -0.471, 0.0, 0.0, 0.0, 0.0, -0.957, -0.471]),
-                   symbols = np.array(["H", "O", "H"]),
-                   molecular_charge = 0,
-                   molecular_multiplicity = 1,
-                   layer = 0)
-    
-    # Perform unit test(s)
-    #assert np.isclose(mol.compute(method = "scf", basis_set = "sto-3g", driver = "energy", program = "psi4").return_result, -73.86598031243479)
-    #assert np.allclose(mol.compute(method = "scf", basis_set = "6-31G*", driver = "gradient", program = "psi4").return_result, np.array([[ 5.60905307e-17, -1.83205576e+00,  9.17096739e-01],
-    #                                                                                                                              [-1.15687191e-26,  0.00000000e+00, -1.83419348e+00],
-    #                                                                                                                              [-5.60905307e-17,  1.83205576e+00,  9.17096739e-01]]))
-
-    # Print the results of a RHF 6-31G* energy calculation
-    result = mol.compute(method = "scf", basis_set = "6-31G*", driver = "energy", program = "psi4", return_dict = True)
-
-    # Print the energy directly
-    print("Energy (RHF/6-31G*):", result["return_result"])
-
-    # Print the results of a RHF STO-3G energy calculation
-    result = mol.compute(method = "scf", basis_set = "sto-3g", driver = "energy", program = "psi4", return_dict = True)
-
-    # Print the energy directly
-    print("Energy (RHF/STO-3G):", result["return_result"])
-""" 
-"""
-    # Print the results of an AM1 semiempirical energy calculation as a dictionary
-    result = mol.compute(method = "am1", basis_set = "", driver = "energy", program = "mopac", return_dict = True)
-
-    for key in result:
-        print(key, ":", result[key])
-
-    # Print the energy directly
-    print("Energy:", result["return_result"])
-
-
-    # Print the results of a MP2 gradient calculation as a dictionary
-    result = mol.compute(method = "mp2", basis_set = "6-31G*", driver = "gradient", program = "psi4", return_dict = True)
-
-    for key in result:
-        print(key, ":", result[key])
-
-    # Print the gradient directly
-    # NOTE: Convert the 1D array to a 3x3 matrix for easier viewing
-    print("Gradient:", np.array(result["return_result"]).reshape(3, 3))
-
-def test_mol_symm():
-
-    # Define the molecule
-    mol = Molecule(name = "water",
-                   geometry = np.array([3.774, -2.093, -0.106, 3.55, -2.923, 0.292, 2.957, -1.619, -0.185]),
-                   symbols = np.array(["O", "H", "H"]),
-                   molecular_charge = 0,
-                   molecular_multiplicity = 1,
-                   layer = 0)
-    
-    # Perform unit test (Test energy with forced C1 symmetry keyword for psi4)
-    keywords = {"scf_type": "df"}
-    task_config = {"memory": 2 * 1024, "ncores": 2}
-    results = mol.compute(method = "scf", basis_set = "6-31G", driver = "energy", program = "psi4", task_config = task_config, keywords = keywords, return_dict = True)
-    print("Energy with C1 symmetry keyword:", results["return_result"])
-
-    for key in results:
-        print(key, ":", results[key])
-        
-# Test molecule addition to verify which atoms are assigned to which segment
-def test_addition():
-
-    # Define the first molecule
-    mol1 = Molecule(name = "water",
-                    geometry = np.array([0.0, 0.957, -0.471, 0.0, 0.0, 0.0, 0.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 0)
-    
-    # Define the second molecule (shifted 3 angstroms along the x-axis)
-    mol2 = Molecule(name = "water",
-                    geometry = np.array([3.0, 0.957, -0.471, 3.0, 0.0, 0.0, 3.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 1)
-    
-    # Add the two molecules together
-    mol3 = mol1 + mol2
-    print("Molecular geometry in numpy array format:", mol3.get_coordinate_matrix())
-    print("Internal molecular geometry representation:", mol3.qcel_mol.geometry)
-    assert np.allclose(mol3.get_coordinate_matrix(), np.array([[ 0. ,  0.957, -0.471],
-                                                               [ 0. ,  0.   ,  0.   ],
-                                                               [ 0. , -0.957, -0.471],
-                                                               [ 3. ,  0.957, -0.471],
-                                                               [ 3. ,  0.   ,  0.   ],
-                                                               [ 3. , -0.957, -0.471]]))
-
-    # Define the third molecule (shifted 3 angstroms along the x-axis)
-    mol4 = Molecule(name = "water",
-                    geometry = np.array([6.0, 0.957, -0.471, 6.0, 0.0, 0.0, 6.0, -0.957, -0.471]),
-                    symbols = np.array(["H", "O", "H"]),
-                    molecular_charge = 0,
-                    molecular_multiplicity = 1,
-                    layer = 2)
-    
-    # Test trimer addition
-    trimer = mol1 + mol2 + mol4
-    print("Molecular geometry in numpy array format:", trimer.get_coordinate_matrix())
-    print("Internal molecular geometry representation:", trimer.qcel_mol.geometry)
-    assert np.allclose(trimer.get_coordinate_matrix(), np.array([[ 0. ,  0.957, -0.471],
-                                                                [ 0. ,  0.   ,  0.   ],
-                                                                [ 0. , -0.957, -0.471],
-                                                                [ 3. ,  0.957, -0.471],
-                                                                [ 3. ,  0.   ,  0.   ],
-                                                                [ 3. , -0.957, -0.471],
-                                                                [ 6. ,  0.957, -0.471],
-                                                                [ 6. ,  0.   ,  0.   ],
-                                                                [ 6. , -0.957, -0.471]]))
-
-def test_mol_symm():
-
-    # Define the molecule
-    mol = Molecule(name = "water",
-                   geometry = np.array([3.774, -2.093, -0.106, 3.55, -2.923, 0.292, 2.957, -1.619, -0.185]),
-                   symbols = np.array(["O", "H", "H"]),
-                   molecular_charge = 0,
-                   molecular_multiplicity = 1,
-                   layer = 0)
-    
-    # Perform unit test (Test energy with forced C1 symmetry keyword for psi4)
-    keywords = {"scf_type": "df"}
-    task_config = {"memory": 2 * 1024, "ncores": 2}
-    results = mol.compute(method = "scf", basis_set = "6-31G", driver = "energy", program = "psi4", task_config = task_config, keywords = keywords, return_dict = True)
-    print("Energy with C1 symmetry keyword:", results["return_result"])
-
-    for key in results:
-        print(key, ":", results[key])"
-"""
 
 # Run the unit test(s) if the module is called directly
 if __name__ == '__main__':
