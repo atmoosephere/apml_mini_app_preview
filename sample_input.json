@@ -1,4 +1,3 @@
-# Sample JSON input file using QCSchema formatting 
 {
     "schema_name": "schema_input_sample",
     "schema_version": 1,
