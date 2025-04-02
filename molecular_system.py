@@ -1,12 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 9 18:19:35 2024
-
-@author: julia
-"""
-
-# Molecular system class
+# Molecular system class handles inputs and initializes Molecular System object 
 
 # Package imports
 import numpy as np
@@ -298,17 +290,6 @@ class MolecularSystem(Molecule):
     # Set layer indices for the molecular system
     def set_layer_indices(self, sort_layers: bool = True) -> None:
 
-        """Set the layer indices for each fragment in the molecular system.
-        
-        Determine the layer index for each fragment in the molecular system based on
-        the fragment's distance from the Q1 center. The layer index determines the
-        level of theory used to compute the fragment's energy.
-
-        Args:
-            sort_layers: Whether to sort the layers in increasing order after setting indices (default: True)
-        """
-
-        # DEBUG printing TODO: Remove
         print("Setting layer indices for fragments...")
         print("Current layer assignments:")
         for frag_index in range(self.num_frags()):
