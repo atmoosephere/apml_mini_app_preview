@@ -5,7 +5,8 @@ import qcelemental as qcel
 import numpy as np
 from numpy.typing import NDArray
 
-# Molecule class
+# Molecule class which handles atomic data and interfaces with QCEngine  
+
 class Molecule():
 
     # Constructor
