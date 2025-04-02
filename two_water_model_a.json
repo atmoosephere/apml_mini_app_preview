@@ -1,0 +1,100 @@
+{
+    "schema_name": "qc_schema_output",
+    "schema_version": 1,
+    "system_name": "Two_H2O_Model_A",
+    "fragments": [
+        {
+            "name": "H2O_1",
+            "layer": 0,
+            "geometry": [
+                0.000,        
+                0.000,        
+                0.000,   
+                0.469,       
+               -0.370,        
+                0.755,     
+                0.467,       
+               -0.374,       
+               -0.754
+            ],
+            "symbols": [
+                "O",
+                "H",
+                "H"
+            ],
+            "molecular_charge": 0,
+            "molecular_multiplicity": 1
+        },
+        {
+            "name": "WAT_8_WAT1",
+            "layer": 2,
+            "geometry": [
+                3.004,        
+                0.000,        
+                0.000,    
+                3.091,        
+                0.591,       
+               -0.755,
+                3.093,
+                0.592,
+                0.754
+            ],
+            "symbols": [
+                "O",
+                "H",
+                "H"
+            ],
+            "molecular_charge": 0,
+            "molecular_multiplicity": 1
+        }
+    ],
+    "driver": "energy",
+    "layers": [
+        {
+            "layer_id": 0,
+            "layer_type": "qm",
+            "method": "scf",
+            "basis_set": "6-31G*"
+        },
+        {
+            "layer_id": 1,
+            "layer_type": "buffer"
+        },
+        {
+            "layer_id": 2,
+            "layer_type": "qm",
+            "method": "scf",
+            "basis_set": "STO-3G"
+        }
+    ],
+    "keywords": {
+        "qm_program": "GAMESS",
+        "se_program": "MOPAC",
+        "mm_program": "QMMM",
+        "map_method": "PAP",
+        "weight_fn": "polynomial",
+        "mmbe_order": 3,
+        "verbose_printing": "True",
+        "q1_center_index": 0,
+        "layer_keywords": [
+            {
+                "layer_id": 0,
+                "radius": 10.0,
+                "e_convergence": 1e-07,
+                "d_convergence": 1e-07
+            },
+            {
+                "layer_id": 1,
+                "radius": 20.0,
+                "e_convergence": 1e-07,
+                "d_convergence": 1e-07
+            },
+            {
+                "layer_id": 2,
+                "radius": 100.0,
+                "e_convergence": 1e-07,
+                "d_convergence": 1e-07
+            }
+        ]
+    }
+}
