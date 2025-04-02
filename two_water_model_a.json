@@ -1,7 +1,7 @@
 {
-    "schema_name": "qc_schema_output",
+    "schema_name": "schema_input_sample",
     "schema_version": 1,
-    "system_name": "Two_H2O_Model_A",
+    "system_name": "Two_H2O_Model",
     "fragments": [
         {
             "name": "H2O_1",
@@ -26,7 +26,7 @@
             "molecular_multiplicity": 1
         },
         {
-            "name": "WAT_8_WAT1",
+            "name": "H2O_2",
             "layer": 2,
             "geometry": [
                 3.004,        
